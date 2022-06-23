@@ -1,4 +1,4 @@
-Learning:
+Learning
 
--React Native(EXPO)
--AWS Amplify
+- React Native(EXPO)
+- AWS Amplify
