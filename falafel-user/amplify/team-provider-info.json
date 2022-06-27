@@ -1,0 +1,20 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-falafel-staging-65817-authRole",
+      "UnauthRoleArn": "arn:aws:iam::277195923141:role/amplify-falafel-staging-65817-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::277195923141:role/amplify-falafel-staging-65817-authRole",
+      "Region": "ap-south-1",
+      "DeploymentBucketName": "amplify-falafel-staging-65817-deployment",
+      "UnauthRoleName": "amplify-falafel-staging-65817-unauthRole",
+      "StackName": "amplify-falafel-staging-65817",
+      "StackId": "arn:aws:cloudformation:ap-south-1:277195923141:stack/amplify-falafel-staging-65817/85d0f570-f5e6-11ec-b2d9-06ae2825967e",
+      "AmplifyAppId": "d2o2t6bg3m16d4"
+    },
+    "categories": {
+      "auth": {
+        "falafel": {}
+      }
+    }
+  }
+}
