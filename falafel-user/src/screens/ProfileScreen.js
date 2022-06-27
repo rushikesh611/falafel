@@ -1,7 +1,7 @@
-import { View, Text, TextInput, StyleSheet, Button } from "react-native";
-import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Auth } from "aws-amplify";
+import { useState } from "react";
+import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Profile = () => {
   const [name, setName] = useState("");
@@ -39,10 +39,17 @@ const Profile = () => {
         placeholder="Longitude"
         style={styles.input}
       />
-      <Button onPress={onSave} title="Save" />
+      <View style={styles.button}>
+        <Button onPress={onSave} title="Save" />
+      </View>
       <Text
         onPress={() => Auth.signOut()}
-        style={{ textAlign: "center", color: "red", margin: 10 }}
+        style={{
+          textAlign: "center",
+          color: "red",
+          margin: 15,
+          fontSize: 16,
+        }}
       >
         Sign out
       </Text>
@@ -52,8 +59,8 @@ const Profile = () => {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 30,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "600",
     textAlign: "center",
     margin: 10,
   },
@@ -62,6 +69,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 15,
     borderRadius: 5,
+  },
+  button: {
+    width: "95%",
+    alignSelf: "center",
+    margin: 10,
   },
 });
 

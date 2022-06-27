@@ -5,7 +5,12 @@ import { withAuthenticator } from "aws-amplify-react-native";
 import config from "./src/aws-exports";
 import RootNavigator from "./src/navigation";
 
-Amplify.configure(config);
+Amplify.configure({
+  ...config,
+  Analytics: {
+    disabled: true,
+  },
+});
 
 function App() {
   return (
