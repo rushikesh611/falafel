@@ -8,13 +8,19 @@ import OrderDetails from "../screens/OrderDetails";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RestaurantDetailsScreen from "../screens/RestaurantDetailsScreen";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const Stack = createNativeStackNavigator();
 
 const RootNavigator = () => {
+  const { dbUser } = useAuthContext();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="HomeTabs" component={HomeTabs} />
+      {dbUser ? (
+        <Stack.Screen name="HomeTabs" component={HomeTabs} />
+      ) : (
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+      )}
     </Stack.Navigator>
   );
 };
