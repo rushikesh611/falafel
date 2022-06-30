@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useBasketContext } from "../contexts/BasketContext";
 import { Dish } from "../models";
 
 const DishDetailsScreen = () => {
@@ -18,11 +19,18 @@ const DishDetailsScreen = () => {
   const route = useRoute();
   const id = route.params?.id;
 
+  const { addDishToBasket } = useBasketContext();
+
   useEffect(() => {
     if (id) {
       DataStore.query(Dish, id).then(setDish);
     }
   }, [id]);
+
+  const onAddToBasket = async () => {
+    await addDishToBasket(dish, quantity);
+    navigation.goBack();
+  };
 
   const onMinus = () => {
     if (quantity > 1) {
@@ -63,10 +71,7 @@ const DishDetailsScreen = () => {
           onPress={onPlus}
         />
       </View>
-      <Pressable
-        onPress={() => navigation.navigate("Basket")}
-        style={styles.button}
-      >
+      <Pressable onPress={onAddToBasket} style={styles.button}>
         <Text style={styles.buttonText}>
           Add {quantity} to basket (${getTotal()})
         </Text>

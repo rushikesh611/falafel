@@ -1,27 +1,28 @@
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import restaurants from "../../assets/data/restaurants.json";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import BasketDishItem from "../components/BasketDishItem";
-
-const restaurant = restaurants[0];
+import { useBasketContext } from "../contexts/BasketContext";
 
 const Basket = () => {
+  const { restaurant, basketDishes, totalPrice } = useBasketContext();
   return (
     <View style={styles.page}>
-      <Text style={styles.name}>{restaurant.name}</Text>
+      <Text style={styles.name}>{restaurant?.name}</Text>
       <Text style={{ fontWeight: "bold", marginTop: 20, fontSize: 19 }}>
         Your items
       </Text>
 
       <FlatList
-        data={restaurant.dishes}
+        data={basketDishes}
         renderItem={({ item }) => <BasketDishItem basketDish={item} />}
       />
 
       <View style={styles.separator} />
 
-      <View style={styles.button}>
-        <Text style={styles.buttonText}>Place Order</Text>
-      </View>
+      <Pressable style={styles.button}>
+        <Text style={styles.buttonText}>
+          Create order &#8226; ${totalPrice.toFixed(2)}
+        </Text>
+      </Pressable>
     </View>
   );
 };
