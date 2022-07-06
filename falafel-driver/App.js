@@ -1,10 +1,16 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { FlatList, StyleSheet, View } from "react-native";
+import orders from "./assets/data/orders.json";
+import OrderItem from "./src/components/OrderItem";
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <FlatList
+        data={orders}
+        renderItem={({ item }) => <OrderItem order={item} />}
+      />
+
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +19,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    paddingTop: 50,
   },
 });
