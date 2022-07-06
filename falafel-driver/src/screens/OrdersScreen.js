@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { View, Text, FlatList } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import orders from "../../assets/data/orders.json";
@@ -7,9 +7,14 @@ import OrderItem from "../components/OrderItem";
 
 const OrdersScreen = () => {
   const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ["12%", "95%"], []);
   return (
     <GestureHandlerRootView style={{ backgroundColor: "lightblue", flex: 1 }}>
-      <BottomSheet ref={bottomSheetRef} snapPoints={["12%", "95%"]}>
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+        handleIndicatorStyle={{ backgroundColor: "grey", width: 100 }}
+      >
         <View style={{ alignItems: "center", marginBottom: 30 }}>
           <Text
             style={{
