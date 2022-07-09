@@ -1,9 +1,11 @@
 import { Entypo } from "@expo/vector-icons";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View, Pressable } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 const OrderItem = ({ order }) => {
+  const navigation = useNavigation();
   return (
-    <View
+    <Pressable
       style={{
         flexDirection: "row",
         borderColor: "#3FC060",
@@ -11,6 +13,9 @@ const OrderItem = ({ order }) => {
         borderWidth: 2,
         margin: 12,
       }}
+      onPress={() =>
+        navigation.navigate("OrdersDeliveryScreen", { id: order.id })
+      }
     >
       <Image
         source={{ uri: order.Restaurant.image }}
@@ -50,7 +55,7 @@ const OrderItem = ({ order }) => {
           style={{ marginLeft: "auto" }}
         />
       </View>
-    </View>
+    </Pressable>
   );
 };
 
