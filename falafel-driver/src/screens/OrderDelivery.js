@@ -1,31 +1,147 @@
-import { useRef, useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  Entypo,
+  FontAwesome5,
+  Fontisto,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
+import * as Location from "expo-location";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { FontAwesome5, Fontisto } from "@expo/vector-icons";
+import MapView, { Marker } from "react-native-maps";
+import MapViewDirections from "react-native-maps-directions";
 import orders from "../../assets/data/orders.json";
 
 const order = orders[0];
 
 const OrderDelivery = () => {
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [totalMinutes, setTotalMinutes] = useState(0);
+  const [totalKm, setTotalKm] = useState(0);
   const bottomSheetRef = useRef(null);
+  const { width, height } = useWindowDimensions();
   const snapPoints = useMemo(() => ["12%", "95%"], []);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (!status === "granted") {
+        console.log("Location permission not granted");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync();
+      setDriverLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    })();
+
+    const foregroundSubscription = Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 100,
+      },
+      (updatedLocation) => {
+        setDriverLocation({
+          latitude: updatedLocation.coords.latitude,
+          longitude: updatedLocation.coords.longitude,
+        });
+      }
+    );
+    return foregroundSubscription;
+  }, []);
+
+  if (!driverLocation) {
+    return <ActivityIndicator size={"large"} />;
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
+      <MapView
+        style={{
+          height,
+          width,
+        }}
+        initialRegion={{
+          latitude: driverLocation.latitude,
+          longitude: driverLocation.longitude,
+          latitudeDelta: 0.07,
+          longitudeDelta: 0.07,
+        }}
+        showsUserLocation
+        followsUserLocation
+      >
+        <MapViewDirections
+          origin={driverLocation}
+          destination={{
+            latitude: order.User.lat,
+            longitude: order.User.lng,
+          }}
+          strokeWidth={5}
+          strokeColor="#3FC060"
+          waypoints={[
+            {
+              latitude: order.Restaurant.lat,
+              longitude: order.Restaurant.lng,
+            },
+          ]}
+          apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          onReady={(result) => {
+            setTotalMinutes(result.duration);
+            setTotalKm(result.distance);
+          }}
+        />
+        <Marker
+          coordinate={{
+            latitude: order.Restaurant.lat,
+            longitude: order.Restaurant.lng,
+          }}
+          title={order.Restaurant.name}
+          description={order.Restaurant.address}
+        >
+          <View
+            style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
+          >
+            <Entypo name="shop" size={30} color="white" />
+          </View>
+        </Marker>
+        <Marker
+          coordinate={{
+            latitude: order.User.lat,
+            longitude: order.User.lng,
+          }}
+          title={order.User.name}
+          description={order.User.address}
+        >
+          <View
+            style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
+          >
+            <MaterialIcons name="restaurant" size={30} color="white" />
+          </View>
+        </Marker>
+      </MapView>
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
         handleIndicatorStyle={styles.handleIndicator}
       >
         <View style={styles.handleIndicatorContainer}>
-          <Text style={styles.routeText}>14 min</Text>
+          <Text style={styles.routeText}>{totalMinutes.toFixed(0)} min</Text>
           <FontAwesome5
             name="shopping-bag"
             size={30}
             color="#3FC060"
             style={{ marginHorizontal: 10 }}
           />
-          <Text style={styles.routeText}>5 km</Text>
+          <Text style={styles.routeText}>{totalKm.toFixed(1)} km</Text>
         </View>
         <View style={styles.deliveryDetailsContainer}>
           <Text style={styles.restaurantName}>{order.Restaurant.name}</Text>
