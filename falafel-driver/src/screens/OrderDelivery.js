@@ -3,6 +3,7 @@ import {
   FontAwesome5,
   Fontisto,
   MaterialIcons,
+  Ionicons,
 } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import * as Location from "expo-location";
@@ -12,22 +13,46 @@ import {
   StyleSheet,
   Text,
   useWindowDimensions,
+  Pressable,
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import orders from "../../assets/data/orders.json";
+import { useNavigation } from "@react-navigation/native";
 
 const order = orders[0];
+
+const restaurantLocation = {
+  latitude: order.Restaurant.lat,
+  longitude: order.Restaurant.lng,
+};
+const deliveryLocation = {
+  latitude: order.User.lat,
+  longitude: order.User.lng,
+};
+
+const ORDER_STATUSES = {
+  READY_FOR_PICKUP: "READY_FOR_PICKUP",
+  ACCEPTED: "ACCEPTED",
+  PICKED_UP: "PICKED_UP",
+};
 
 const OrderDelivery = () => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
+  const [deliveryStatus, setDeliveryStatus] = useState(
+    ORDER_STATUSES.READY_FOR_PICKUP
+  );
+  const [isDriverClose, setIsDriverClose] = useState(false);
+
   const bottomSheetRef = useRef(null);
+  const mapRef = useRef(null);
   const { width, height } = useWindowDimensions();
   const snapPoints = useMemo(() => ["12%", "95%"], []);
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -63,9 +88,57 @@ const OrderDelivery = () => {
     return <ActivityIndicator size={"large"} />;
   }
 
+  const onButtonpressed = () => {
+    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+      bottomSheetRef.current?.collapse();
+      mapRef.current.animateToRegion({
+        latitude: driverLocation.latitude,
+        longitude: driverLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+      setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+    }
+    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+      bottomSheetRef.current?.collapse();
+      setDeliveryStatus(ORDER_STATUSES.PICKED_UP);
+    }
+    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+      bottomSheetRef.current?.collapse();
+      navigation.goBack();
+      console.warn("Delivery Finished");
+    }
+  };
+
+  const renderButtonTitle = () => {
+    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+      return "Accept Order";
+    }
+    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+      return "Pick-Up Order";
+    }
+    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+      return "Complete Delivery";
+    }
+  };
+
+  const isButtonDisabled = () => {
+    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+      return false;
+    }
+    if (deliveryStatus === ORDER_STATUSES.ACCEPTED && isDriverClose) {
+      return false;
+    }
+    if (deliveryStatus === ORDER_STATUSES.PICKED_UP && isDriverClose) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <MapView
+        ref={mapRef}
         style={{
           height,
           width,
@@ -81,20 +154,22 @@ const OrderDelivery = () => {
       >
         <MapViewDirections
           origin={driverLocation}
-          destination={{
-            latitude: order.User.lat,
-            longitude: order.User.lng,
-          }}
+          destination={
+            deliveryStatus === ORDER_STATUSES.ACCEPTED
+              ? restaurantLocation
+              : deliveryLocation
+          }
           strokeWidth={5}
           strokeColor="#3FC060"
-          waypoints={[
-            {
-              latitude: order.Restaurant.lat,
-              longitude: order.Restaurant.lng,
-            },
-          ]}
-          apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          waypoints={
+            deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP
+              ? [restaurantLocation]
+              : []
+          }
+          apikey={"AIzaSyAqPTl3sQTSIiG7GOHdj_6ARUDj0nZQQFk"}
+          // apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
           onReady={(result) => {
+            setIsDriverClose(result.distance <= 0.1);
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
@@ -128,6 +203,15 @@ const OrderDelivery = () => {
           </View>
         </Marker>
       </MapView>
+      {deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP && (
+        <Ionicons
+          onPress={() => navigation.goBack()}
+          name="arrow-back-circle"
+          size={45}
+          color="black"
+          style={{ top: 40, left: 15, position: "absolute" }}
+        />
+      )}
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
@@ -164,9 +248,16 @@ const OrderDelivery = () => {
             <Text style={styles.orderItemText}>Coke x1</Text>
           </View>
         </View>
-        <View style={styles.buttonContainer}>
-          <Text style={styles.buttonText}>Accept Order</Text>
-        </View>
+        <Pressable
+          style={{
+            ...styles.buttonContainer,
+            backgroundColor: isButtonDisabled() ? "grey" : "#3FC060",
+          }}
+          onPress={onButtonpressed}
+          disabled={isButtonDisabled()}
+        >
+          <Text style={styles.buttonText}>{renderButtonTitle()}</Text>
+        </Pressable>
       </BottomSheet>
     </GestureHandlerRootView>
   );
@@ -232,7 +323,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   buttonContainer: {
-    backgroundColor: "#3FC060",
     marginTop: "auto",
     marginVertical: 20,
     marginHorizontal: 10,
