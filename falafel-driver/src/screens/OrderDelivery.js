@@ -166,8 +166,7 @@ const OrderDelivery = () => {
               ? [restaurantLocation]
               : []
           }
-          apikey={"AIzaSyAqPTl3sQTSIiG7GOHdj_6ARUDj0nZQQFk"}
-          // apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
           onReady={(result) => {
             setIsDriverClose(result.distance <= 0.1);
             setTotalMinutes(result.duration);
