@@ -113,7 +113,7 @@ export declare class Order {
   readonly id: string;
   readonly userID: string;
   readonly Restaurant?: Restaurant | null;
-  readonly tota: number;
+  readonly total: number;
   readonly status: OrderStatus | keyof typeof OrderStatus;
   readonly OrderDishes?: (OrderDish | null)[] | null;
   readonly Courier?: Courier | null;

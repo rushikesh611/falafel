@@ -513,8 +513,8 @@ export const schema = {
                         "targetName": "orderRestaurantId"
                     }
                 },
-                "tota": {
-                    "name": "tota",
+                "total": {
+                    "name": "total",
                     "isArray": false,
                     "type": "Float",
                     "isRequired": true,
@@ -901,5 +901,5 @@ export const schema = {
         }
     },
     "nonModels": {},
-    "version": "3280000fe81f17871405f58a6c79ebea"
+    "version": "e17b5881996775a8612ebd428c71f1cd"
 };
