@@ -1,5 +1,10 @@
 import { ModelInit, MutableModel, PersistentModelConstructor } from "@aws-amplify/datastore";
 
+export enum TransportationModes {
+  DRIVING = "DRIVING",
+  BICYCLING = "BICYCLING"
+}
+
 export enum OrderStatus {
   NEW = "NEW",
   COOKING = "COOKING",
@@ -9,6 +14,10 @@ export enum OrderStatus {
 }
 
 
+
+type CourierMetaData = {
+  readOnlyFields: 'createdAt' | 'updatedAt';
+}
 
 type BasketMetaData = {
   readOnlyFields: 'createdAt' | 'updatedAt';
@@ -36,6 +45,19 @@ type RestaurantMetaData = {
 
 type UserMetaData = {
   readOnlyFields: 'createdAt' | 'updatedAt';
+}
+
+export declare class Courier {
+  readonly id: string;
+  readonly name: string;
+  readonly sub: string;
+  readonly lat?: string | null;
+  readonly lng?: string | null;
+  readonly transportationMode: TransportationModes | keyof typeof TransportationModes;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  constructor(init: ModelInit<Courier, CourierMetaData>);
+  static copyOf(source: Courier, mutator: (draft: MutableModel<Courier, CourierMetaData>) => MutableModel<Courier, CourierMetaData> | void): Courier;
 }
 
 export declare class Basket {
@@ -94,9 +116,11 @@ export declare class Order {
   readonly tota: number;
   readonly status: OrderStatus | keyof typeof OrderStatus;
   readonly OrderDishes?: (OrderDish | null)[] | null;
+  readonly Courier?: Courier | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly orderRestaurantId?: string | null;
+  readonly orderCourierId?: string | null;
   constructor(init: ModelInit<Order, OrderMetaData>);
   static copyOf(source: Order, mutator: (draft: MutableModel<Order, OrderMetaData>) => MutableModel<Order, OrderMetaData> | void): Order;
 }
