@@ -3,7 +3,7 @@
   "serviceConfiguration": {
     "apiName": "falafel",
     "serviceName": "AppSync",
-    "gqlSchemaPath": "/tmp/amplify-64cf9ddc-fb6a-4735-b18e-105d326514fe/amplify/backend/api/falafel/schema.graphql",
+    "gqlSchemaPath": "/tmp/amplify-0bf70c80-44e0-49b4-ad57-243cdb78c488/amplify/backend/api/falafel/schema.graphql",
     "defaultAuthType": {
       "mode": "API_KEY",
       "keyDescription": "api key description",
