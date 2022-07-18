@@ -2,25 +2,24 @@ import {
   Entypo,
   FontAwesome5,
   Fontisto,
-  MaterialIcons,
   Ionicons,
+  MaterialIcons,
 } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
+import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
-  Pressable,
   View,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import orders from "../../assets/data/orders.json";
-import { useNavigation } from "@react-navigation/native";
 
 const order = orders[0];
 
@@ -136,7 +135,7 @@ const OrderDelivery = () => {
   };
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <View style={styles.container}>
       <MapView
         ref={mapRef}
         style={{
@@ -166,7 +165,8 @@ const OrderDelivery = () => {
               ? [restaurantLocation]
               : []
           }
-          apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          // apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          apikey={"AIzaSyAqPTl3sQTSIiG7GOHdj_6ARUDj0nZQQFk"}
           onReady={(result) => {
             setIsDriverClose(result.distance <= 0.1);
             setTotalMinutes(result.duration);
@@ -258,7 +258,7 @@ const OrderDelivery = () => {
           <Text style={styles.buttonText}>{renderButtonTitle()}</Text>
         </Pressable>
       </BottomSheet>
-    </GestureHandlerRootView>
+    </View>
   );
 };
 

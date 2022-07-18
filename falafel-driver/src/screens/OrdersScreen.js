@@ -2,7 +2,6 @@ import { Entypo } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useMemo, useRef } from "react";
 import { FlatList, Text, useWindowDimensions, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { Marker } from "react-native-maps";
 import orders from "../../assets/data/orders.json";
 import OrderItem from "../components/OrderItem";
@@ -13,7 +12,7 @@ const OrdersScreen = () => {
   const snapPoints = useMemo(() => ["12%", "95%"], []);
 
   return (
-    <GestureHandlerRootView style={{ backgroundColor: "lightblue", flex: 1 }}>
+    <View style={{ backgroundColor: "lightblue", flex: 1 }}>
       <MapView
         style={{
           height,
@@ -65,7 +64,7 @@ const OrdersScreen = () => {
           renderItem={({ item }) => <OrderItem order={item} />}
         />
       </BottomSheet>
-    </GestureHandlerRootView>
+    </View>
   );
 };
 
