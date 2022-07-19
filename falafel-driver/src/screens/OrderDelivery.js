@@ -5,7 +5,7 @@ import {
   Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -19,25 +19,13 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { DataStore } from "aws-amplify";
-import { Order, OrderDish, User } from "../models";
-
-const ORDER_STATUSES = {
-  READY_FOR_PICKUP: "READY_FOR_PICKUP",
-  ACCEPTED: "ACCEPTED",
-  PICKED_UP: "PICKED_UP",
-};
+import { useOrderContext } from "../contexts/OrderContext";
 
 const OrderDelivery = () => {
-  const [order, setOrder] = useState(null);
-  const [user, setUser] = useState(null);
-  const [dishItems, setDishItems] = useState([]);
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
-  const [deliveryStatus, setDeliveryStatus] = useState(
-    ORDER_STATUSES.READY_FOR_PICKUP
-  );
+
   const [isDriverClose, setIsDriverClose] = useState(false);
 
   const bottomSheetRef = useRef(null);
@@ -48,23 +36,19 @@ const OrderDelivery = () => {
   const route = useRoute();
   const id = route.params?.id;
 
+  const {
+    order,
+    user,
+    dishes,
+    acceptOrder,
+    fetchOrder,
+    completeOrder,
+    pickUpOrder,
+  } = useOrderContext();
+
   useEffect(() => {
-    if (!id) {
-      return;
-    }
-    DataStore.query(Order, id).then(setOrder);
+    fetchOrder(id);
   }, [id]);
-
-  useEffect(() => {
-    if (!order) {
-      return;
-    }
-    DataStore.query(User, order.userID).then(setUser);
-
-    DataStore.query(OrderDish, (od) => od.orderID("eq", order.id)).then(
-      setDishItems
-    );
-  }, [order]);
 
   useEffect(() => {
     (async () => {
@@ -96,8 +80,8 @@ const OrderDelivery = () => {
     return foregroundSubscription;
   }, []);
 
-  const onButtonpressed = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+  const onButtonpressed = async () => {
+    if (order.status === "READY_FOR_PICKUP") {
       bottomSheetRef.current?.collapse();
       mapRef.current.animateToRegion({
         latitude: driverLocation.latitude,
@@ -105,39 +89,39 @@ const OrderDelivery = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
-      setDeliveryStatus(ORDER_STATUSES.ACCEPTED);
+      acceptOrder();
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+    if (order.status === "ACCEPTED") {
       bottomSheetRef.current?.collapse();
-      setDeliveryStatus(ORDER_STATUSES.PICKED_UP);
+      pickUpOrder();
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+    if (order.status === "PICKED_UP") {
+      await completeOrder();
       bottomSheetRef.current?.collapse();
       navigation.goBack();
-      console.warn("Delivery Finished");
     }
   };
 
   const renderButtonTitle = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+    if (order.status === "READY_FOR_PICKUP") {
       return "Accept Order";
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED) {
+    if (order.status === "ACCEPTED") {
       return "Pick-Up Order";
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP) {
+    if (order.status === "PICKED_UP") {
       return "Complete Delivery";
     }
   };
 
   const isButtonDisabled = () => {
-    if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
+    if (order.status === "READY_FOR_PICKUP") {
       return false;
     }
-    if (deliveryStatus === ORDER_STATUSES.ACCEPTED && isDriverClose) {
+    if (order.status === "ACCEPTED" && isDriverClose) {
       return false;
     }
-    if (deliveryStatus === ORDER_STATUSES.PICKED_UP && isDriverClose) {
+    if (order.status === "PICKED_UP" && isDriverClose) {
       return false;
     }
     return true;
@@ -156,8 +140,6 @@ const OrderDelivery = () => {
   if (!order || !user || !driverLocation) {
     return <ActivityIndicator size={"large"} color="gray" />;
   }
-
-  console.log(dishItems);
 
   return (
     <View style={styles.container}>
@@ -181,13 +163,14 @@ const OrderDelivery = () => {
           destination={
             order.status === "ACCEPTED" ? restaurantLocation : deliveryLocation
           }
-          strokeWidth={10}
+          strokeWidth={5}
           waypoints={
             order.status === "READY_FOR_PICKUP" ? [restaurantLocation] : []
           }
           strokeColor="#3FC060"
           apikey={"AIzaSyB7bA8QeDXo7vQsaST7Len6ON1m5a_BI0k"}
           onReady={(result) => {
+            setIsDriverClose(result.distance <= 0.1);
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
@@ -208,8 +191,8 @@ const OrderDelivery = () => {
         </Marker>
         <Marker
           coordinate={deliveryLocation}
-          title={user.name}
-          description={user.address}
+          title={user?.name}
+          description={user?.address}
         >
           <View
             style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
@@ -218,7 +201,7 @@ const OrderDelivery = () => {
           </View>
         </Marker>
       </MapView>
-      {deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP && (
+      {order.status === "READY_FOR_PICKUP" && (
         <Ionicons
           onPress={() => navigation.goBack()}
           name="arrow-back-circle"
@@ -258,9 +241,9 @@ const OrderDelivery = () => {
             <Text style={styles.userAddressText}>{user.address}</Text>
           </View>
           <View style={styles.orderDetailsContainer}>
-            {dishItems.map((item) => (
-              <Text style={styles.orderItemText} key={item.id}>
-                {item.Dish.name} x{item.quantity}
+            {dishes?.map((dishItem) => (
+              <Text style={styles.orderItemText} key={dishItem.id}>
+                {dishItem.Dish.name} x{dishItem.quantity}
               </Text>
             ))}
           </View>
