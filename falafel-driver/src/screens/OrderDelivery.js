@@ -5,8 +5,8 @@ import {
   Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import BottomSheet from "@gorhom/bottom-sheet";
-import { useNavigation } from "@react-navigation/native";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -19,18 +19,8 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import orders from "../../assets/data/orders.json";
-
-const order = orders[0];
-
-const restaurantLocation = {
-  latitude: order.Restaurant.lat,
-  longitude: order.Restaurant.lng,
-};
-const deliveryLocation = {
-  latitude: order.User.lat,
-  longitude: order.User.lng,
-};
+import { DataStore } from "aws-amplify";
+import { Order, OrderDish, User } from "../models";
 
 const ORDER_STATUSES = {
   READY_FOR_PICKUP: "READY_FOR_PICKUP",
@@ -39,6 +29,9 @@ const ORDER_STATUSES = {
 };
 
 const OrderDelivery = () => {
+  const [order, setOrder] = useState(null);
+  const [user, setUser] = useState(null);
+  const [dishItems, setDishItems] = useState([]);
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
@@ -52,6 +45,26 @@ const OrderDelivery = () => {
   const { width, height } = useWindowDimensions();
   const snapPoints = useMemo(() => ["12%", "95%"], []);
   const navigation = useNavigation();
+  const route = useRoute();
+  const id = route.params?.id;
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    DataStore.query(Order, id).then(setOrder);
+  }, [id]);
+
+  useEffect(() => {
+    if (!order) {
+      return;
+    }
+    DataStore.query(User, order.userID).then(setUser);
+
+    DataStore.query(OrderDish, (od) => od.orderID("eq", order.id)).then(
+      setDishItems
+    );
+  }, [order]);
 
   useEffect(() => {
     (async () => {
@@ -82,10 +95,6 @@ const OrderDelivery = () => {
     );
     return foregroundSubscription;
   }, []);
-
-  if (!driverLocation) {
-    return <ActivityIndicator size={"large"} />;
-  }
 
   const onButtonpressed = () => {
     if (deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP) {
@@ -134,6 +143,22 @@ const OrderDelivery = () => {
     return true;
   };
 
+  const restaurantLocation = {
+    latitude: order?.Restaurant?.lat,
+    longitude: order?.Restaurant?.lng,
+  };
+
+  const deliveryLocation = {
+    latitude: user?.lat,
+    longitude: user?.lng,
+  };
+
+  if (!order || !user || !driverLocation) {
+    return <ActivityIndicator size={"large"} color="gray" />;
+  }
+
+  console.log(dishItems);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -154,21 +179,15 @@ const OrderDelivery = () => {
         <MapViewDirections
           origin={driverLocation}
           destination={
-            deliveryStatus === ORDER_STATUSES.ACCEPTED
-              ? restaurantLocation
-              : deliveryLocation
+            order.status === "ACCEPTED" ? restaurantLocation : deliveryLocation
           }
-          strokeWidth={5}
-          strokeColor="#3FC060"
+          strokeWidth={10}
           waypoints={
-            deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP
-              ? [restaurantLocation]
-              : []
+            order.status === "READY_FOR_PICKUP" ? [restaurantLocation] : []
           }
-          apikey={"AIzaSyAqPTl3sQTSIiG7GOHdj_6ARUDj0nZQQFk"}
-          // apikey={"AIzaSyAWvPMKJvPGDgCJgjvxINArI_Y3HRV4bMs"}
+          strokeColor="#3FC060"
+          apikey={"AIzaSyB7bA8QeDXo7vQsaST7Len6ON1m5a_BI0k"}
           onReady={(result) => {
-            setIsDriverClose(result.distance <= 0.1);
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
@@ -188,12 +207,9 @@ const OrderDelivery = () => {
           </View>
         </Marker>
         <Marker
-          coordinate={{
-            latitude: order.User.lat,
-            longitude: order.User.lng,
-          }}
-          title={order.User.name}
-          description={order.User.address}
+          coordinate={deliveryLocation}
+          title={user.name}
+          description={user.address}
         >
           <View
             style={{ backgroundColor: "green", padding: 5, borderRadius: 20 }}
@@ -239,12 +255,14 @@ const OrderDelivery = () => {
               color="gray"
               style={{ marginLeft: 4 }}
             />
-            <Text style={styles.userAddressText}>{order.User.address}</Text>
+            <Text style={styles.userAddressText}>{user.address}</Text>
           </View>
           <View style={styles.orderDetailsContainer}>
-            <Text style={styles.orderItemText}>Falafel x1</Text>
-            <Text style={styles.orderItemText}>Pizza x2</Text>
-            <Text style={styles.orderItemText}>Coke x1</Text>
+            {dishItems.map((item) => (
+              <Text style={styles.orderItemText} key={item.id}>
+                {item.Dish.name} x{item.quantity}
+              </Text>
+            ))}
           </View>
         </View>
         <Pressable
