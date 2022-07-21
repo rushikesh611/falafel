@@ -3,6 +3,7 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useOrderContext } from "../contexts/OrderContext";
+import { useNavigation } from "@react-navigation/native";
 
 const STATUS_TO_TITLE = {
   READY_FOR_PICKUP: "Accept Order",
@@ -15,6 +16,7 @@ const BottomSheetDetails = (props) => {
   const isDriverClose = totalKm <= 1;
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ["12%", "95%"], []);
+  const navigation = useNavigation();
 
   const { order, user, dishes, acceptOrder, completeOrder, pickUpOrder } =
     useOrderContext();

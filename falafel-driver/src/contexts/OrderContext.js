@@ -1,5 +1,5 @@
 import { DataStore } from "aws-amplify";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderDish, User } from "../models";
 import { useAuthContext } from "./AuthContext";
 
@@ -25,6 +25,22 @@ const OrderContextProvider = ({ children }) => {
       setDishes
     );
   };
+
+  useEffect(() => {
+    if (!order) {
+      return;
+    }
+
+    const subscription = DataStore.observe(Order, order.id).subscribe(
+      ({ opType, element }) => {
+        if (opType === "UPDATE") {
+          fetchOrder(element.id);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [order?.id]);
 
   const acceptOrder = async () => {
     const updatedOrder = await DataStore.save(
