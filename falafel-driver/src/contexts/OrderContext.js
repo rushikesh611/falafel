@@ -26,29 +26,32 @@ const OrderContextProvider = ({ children }) => {
     );
   };
 
-  const acceptOrder = () => {
-    DataStore.save(
+  const acceptOrder = async () => {
+    const updatedOrder = await DataStore.save(
       Order.copyOf(order, (updated) => {
         updated.status = "ACCEPTED";
         updated.Courier = dbCourier;
       })
-    ).then(setOrder);
+    );
+    setOrder(updatedOrder);
   };
 
-  const pickUpOrder = () => {
-    DataStore.save(
+  const pickUpOrder = async () => {
+    const updatedOrder = await DataStore.save(
       Order.copyOf(order, (updated) => {
         updated.status = "PICKED_UP";
       })
-    ).then(setOrder);
+    );
+    setOrder(updatedOrder);
   };
 
-  const completeOrder = () => {
-    DataStore.save(
+  const completeOrder = async () => {
+    const updatedOrder = await DataStore.save(
       Order.copyOf(order, (updated) => {
         updated.status = "COMPLETED";
       })
-    ).then(setOrder);
+    );
+    setOrder(updatedOrder);
   };
 
   return (
