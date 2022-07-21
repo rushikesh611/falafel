@@ -1,23 +1,62 @@
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { DataStore } from "aws-amplify";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Text, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import MapView from "react-native-maps";
+import * as Location from "expo-location";
 import CustomMarker from "../components/CustomMarker";
 import OrderItem from "../components/OrderItem";
 import { Order } from "../models";
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
+  const [driverLocation, setDriverLocation] = useState(null);
   const bottomSheetRef = useRef(null);
   const { width, height } = useWindowDimensions();
   const snapPoints = useMemo(() => ["12%", "95%"], []);
 
-  useEffect(() => {
+  const fetchOrders = () => {
     DataStore.query(Order, (order) =>
       order.status("eq", "READY_FOR_PICKUP")
     ).then(setOrders);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+
+    const subscription = DataStore.observe(Order).subscribe((msg) => {
+      if (msg.opType === "UPDATE") {
+        fetchOrders();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (!status === "granted") {
+        console.log("Nonono");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync();
+      setDriverLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    })();
+  }, []);
+
+  if (!driverLocation) {
+    return <ActivityIndicator size={"large"} color="gray" />;
+  }
 
   return (
     <View style={{ backgroundColor: "lightblue", flex: 1 }}>
@@ -28,6 +67,12 @@ const OrdersScreen = () => {
         }}
         showsUserLocation
         followsUserLocation
+        initialRegion={{
+          latitude: driverLocation.latitude,
+          longitude: driverLocation.longitude,
+          latitudeDelta: 0.07,
+          longitudeDelta: 0.07,
+        }}
       >
         {orders.map((order) => (
           <CustomMarker
