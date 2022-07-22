@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Basket from "../screens/Basket";
 import DishDetailsScreen from "../screens/DishDetailsScreen";
 import HomeScreen from "../screens/HomeScreen";
-import OrderDetails from "../screens/OrderDetails";
+import OrderDetailsNavigator from "./OrderDetailsNavigator";
 import OrdersScreen from "../screens/OrdersScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RestaurantDetailsScreen from "../screens/RestaurantDetailsScreen";
@@ -43,7 +43,7 @@ const HomeTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Orders"
+        name="OrdersTab"
         component={OrderStackNavigator}
         options={{
           tabBarIcon: ({ color }) => (
@@ -87,7 +87,11 @@ const OrderStackNavigator = () => {
   return (
     <OrdersStack.Navigator>
       <OrdersStack.Screen name="Past Orders" component={OrdersScreen} />
-      <OrdersStack.Screen name="Order" component={OrderDetails} />
+      <OrdersStack.Screen
+        name="Order"
+        component={OrderDetailsNavigator}
+        screenOptions={{ headerShown: false }}
+      />
     </OrdersStack.Navigator>
   );
 };

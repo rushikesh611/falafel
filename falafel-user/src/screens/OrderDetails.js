@@ -1,4 +1,3 @@
-import { useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,11 +27,9 @@ const OrderDetailsHeader = ({ order }) => {
   );
 };
 
-const OrderDetails = () => {
+const OrderDetails = ({ id }) => {
   const [order, setOrder] = useState();
   const { getOrder } = useOrderContext();
-  const route = useRoute();
-  const id = route.params?.id;
 
   useEffect(() => {
     getOrder(id).then(setOrder);
