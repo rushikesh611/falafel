@@ -1,9 +1,7 @@
+import DetailedOrder from "./components/DetailedOrder";
+
 function App() {
-  return (
-    <div className="App">
-      <span>hello</span>
-    </div>
-  );
+  return <DetailedOrder />;
 }
 
 export default App;
