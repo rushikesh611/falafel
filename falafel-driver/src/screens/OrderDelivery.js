@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { DataStore } from "aws-amplify";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -12,7 +13,9 @@ import MapView from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import BottomSheetDetails from "../components/BottomSheetDetails";
 import CustomMarker from "../components/CustomMarker";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useOrderContext } from "../contexts/OrderContext";
+import { Courier } from "../models";
 
 const OrderDelivery = () => {
   const [driverLocation, setDriverLocation] = useState(null);
@@ -27,10 +30,23 @@ const OrderDelivery = () => {
   const id = route.params?.id;
 
   const { order, user, fetchOrder } = useOrderContext();
+  const { dbCourier } = useAuthContext();
 
   useEffect(() => {
     fetchOrder(id);
   }, [id]);
+
+  useEffect(() => {
+    if (!driverLocation) {
+      return;
+    }
+    DataStore.save(
+      Courier.copyOf(dbCourier, (updated) => {
+        updated.lat = driverLocation.latitude;
+        updated.lng = driverLocation.longitude;
+      })
+    );
+  }, [driverLocation]);
 
   useEffect(() => {
     (async () => {
