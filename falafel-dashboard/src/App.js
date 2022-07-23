@@ -1,7 +1,5 @@
-import Orders from "./pages/Orders";
-import { Route, Routes } from "react-router-dom";
-import DetailedOrder from "./pages/DetailedOrder";
-import { Layout, Image } from "antd";
+import { Image, Layout, Divider } from "antd";
+import AppRoutes from "./components/AppRoutes";
 import SideMenu from "./components/SideMenu";
 
 const { Sider, Content, Footer } = Layout;
@@ -14,14 +12,12 @@ function App() {
           src="https://img.freepik.com/premium-vector/traditional-dish-jewish-cuisine-falafel_51697-263.jpg"
           preview={false}
         />
+        <Divider />
         <SideMenu />
       </Sider>
       <Layout>
         <Content style={{}}>
-          <Routes>
-            <Route path="" element={<Orders />} />
-            <Route path="order/:id" element={<DetailedOrder />} />
-          </Routes>
+          <AppRoutes />
         </Content>
         <Footer style={{ textAlign: "center" }}>Falafel ©2022</Footer>
       </Layout>
