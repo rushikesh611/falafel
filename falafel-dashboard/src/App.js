@@ -1,6 +1,10 @@
 import { Image, Layout, Divider } from "antd";
 import AppRoutes from "./components/AppRoutes";
 import SideMenu from "./components/SideMenu";
+import { Amplify } from "aws-amplify";
+import awsconfig from "./aws-exports";
+
+Amplify.configure(awsconfig);
 
 const { Sider, Content, Footer } = Layout;
 
