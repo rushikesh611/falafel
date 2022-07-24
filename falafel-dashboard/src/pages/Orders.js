@@ -1,36 +1,70 @@
-import orders from "../assets/data/orders.json";
+import { useState, useEffect } from "react";
+import { DataStore } from "aws-amplify";
 import { Card, Table, Tag } from "antd";
 import { useNavigate } from "react-router-dom";
+import { Order, OrderStatus } from "../models";
+import { useRestaurantContext } from "../contexts/RestaurantContext";
 
 const Orders = () => {
+  const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
+  const { restaurant } = useRestaurantContext();
+
+  useEffect(() => {
+    if (!restaurant) {
+      return;
+    }
+    DataStore.query(Order, (order) =>
+      order
+        .orderRestaurantId("eq", restaurant.id)
+        .or((orderStatus) =>
+          orderStatus
+            .status("eq", "NEW")
+            .status("eq", "COOKING")
+            .status("eq", "ACCEPTED")
+            .status("eq", "READY_FOR_PICKUP")
+        )
+    ).then(setOrders);
+  }, [restaurant]);
+
+  useEffect(() => {
+    const subscription = DataStore.observe(Order).subscribe((msg) => {
+      const { opType, element } = msg;
+      if (opType === "INSERT" && element.orderRestaurantId === restaurant.id) {
+        setOrders((existingOrders) => [element, ...existingOrders]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const renderOrderStatus = (orderStatus) => {
-    if (orderStatus === "Accepted") {
-      return <Tag color="green">{orderStatus}</Tag>;
-    }
-    if (orderStatus === "Pending") {
-      return <Tag color="orange">{orderStatus}</Tag>;
-    }
-    if (orderStatus === "Declined") {
-      return <Tag color="red">{orderStatus}</Tag>;
-    }
+    const statusToColor = {
+      [OrderStatus.NEW]: "green",
+      [OrderStatus.COOKING]: "orange",
+      [OrderStatus.READY_FOR_PICKUP]: "red",
+      [OrderStatus.ACCEPTED]: "purple",
+    };
+
+    return <Tag color={statusToColor[orderStatus]}>{orderStatus}</Tag>;
   };
+
   const tableColumns = [
     {
       title: "Order ID",
-      dataIndex: "orderID",
-      key: "orderID",
+      dataIndex: "id",
+      key: "id",
     },
     {
-      title: "Delivery Address",
-      dataIndex: "deliveryAddress",
-      key: "deliveryAddress",
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
     },
     {
       title: "Price",
-      dataIndex: "price",
-      key: "price",
-      render: (price) => `${price} $`,
+      dataIndex: "total",
+      key: "total",
+      render: (price) => `${price.toFixed(2)} $`,
     },
     {
       title: "Status",
@@ -44,9 +78,9 @@ const Orders = () => {
       <Table
         dataSource={orders}
         columns={tableColumns}
-        rowKey="orderID"
+        rowKey="id"
         onRow={(orderItem) => ({
-          onClick: () => navigate(`order/${orderItem.orderID}`),
+          onClick: () => navigate(`order/${orderItem.id}`),
         })}
       />
     </Card>
